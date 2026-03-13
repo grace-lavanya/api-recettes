@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Recettes — Documentation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0F1117;
+      --card: #1A1D27;
+      --border: #2A2D3A;
+      --accent: #FF6B35;
+      --green: #4CAF50;
+      --blue: #4361EE;
+      --red: #E63946;
+      --text: #E8E8E8;
+      --muted: #888;
+      --get: #4361EE;
+      --post: #4CAF50;
+      --delete: #E63946;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .api-badge {
+      background: var(--accent);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      letter-spacing: 1px;
+    }
+    header h1 { font-size: 1.3rem; }
+    header p { color: var(--muted); font-size: 0.85rem; margin-top: 0.2rem; }
+    .base-url {
+      margin-left: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: calc(100vh - 80px);
+    }
+
+    /* ── SIDEBAR ── */
+    aside {
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+      position: sticky;
+      top: 0;
+      height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+    .sidebar-section { margin-bottom: 1.5rem; }
+    .sidebar-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 0 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      width: 100%;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+    .sidebar-item:hover { background: rgba(255,255,255,0.05); }
+    .sidebar-item.active { background: rgba(255,107,53,0.1); color: var(--accent); }
+    .method-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      min-width: 48px;
+      text-align: center;
+    }
+    .get-badge { background: rgba(67,97,238,0.2); color: var(--get); }
+    .post-badge { background: rgba(76,175,80,0.2); color: var(--post); }
+    .delete-badge { background: rgba(230,57,70,0.2); color: var(--delete); }
+
+    /* ── MAIN ── */
+    main { padding: 2rem; overflow-y: auto; }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+    .tab {
+      padding: 0.7rem 1.5rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      background: transparent;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      color: var(--muted);
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── SECTION ── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── ENDPOINT CARD ── */
+    .endpoint-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .endpoint-header:hover { background: rgba(255,255,255,0.03); }
+    .endpoint-path { font-family: monospace; font-size: 0.95rem; }
+    .endpoint-desc { color: var(--muted); font-size: 0.82rem; margin-left: auto; }
+    .endpoint-body { border-top: 1px solid var(--border); padding: 1.5rem; }
+
+    /* ── TRY IT ── */
+    .try-section { margin-top: 1rem; }
+    .try-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 0.5rem; }
+    .try-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.8rem;
+      color: var(--text);
+      font-family: monospace;
+      font-size: 0.85rem;
+      margin-bottom: 0.8rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .try-input:focus { border-color: var(--accent); }
+    .try-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .try-btn:hover { opacity: 0.85; }
+    .try-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── RESPONSE ── */
+    .response-box {
+      margin-top: 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .response-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+    .status-badge {
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+    .status-ok { background: rgba(76,175,80,0.2); color: var(--green); }
+    .status-err { background: rgba(230,57,70,0.2); color: var(--red); }
+    .response-body {
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #A8D8A8;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+
+    /* ── CLIENT WEB ── */
+    .search-bar {
+      display: flex;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .search-bar input {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .search-bar input:focus { border-color: var(--accent); }
+    .search-bar button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem 1.5rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .filters {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 20px;
+      padding: 0.3rem 0.9rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+    .recettes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .recette-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      transition: border-color 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+    .recette-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .recette-cat {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+    }
+    .recette-nom { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .recette-desc { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.8rem; }
+    .recette-meta { display: flex; gap: 0.8rem; font-size: 0.75rem; color: var(--muted); }
+    .recette-meta span { display: flex; align-items: center; gap: 0.3rem; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 560px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal h2 { font-size: 1.2rem; margin-bottom: 0.3rem; }
+    .modal-meta { color: var(--muted); font-size: 0.82rem; margin-bottom: 1.2rem; }
+    .modal-section { margin-bottom: 1.2rem; }
+    .modal-section h4 { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; }
+    .modal-section ul { padding-left: 1.2rem; font-size: 0.88rem; line-height: 2; }
+    .modal-section ol { padding-left: 1.2rem; font-size: 0.88rem; line-height: 2; }
+    .modal-close {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+    }
+
+    /* ── FORM AJOUT ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+    .form-group input, .form-group textarea, .form-group select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.8rem;
+      color: var(--text);
+      font-size: 0.88rem;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .btn-submit {
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-submit:hover { opacity: 0.85; }
+
+    .loading { text-align: center; color: var(--muted); padding: 3rem; }
+    .empty { text-align: center; color: var(--muted); padding: 3rem; }
+
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; }
+      aside { display: none; }
+      .form-grid { grid-template-columns: 1fr; }
+      .base-url { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:0.3rem;">
+      <span class="api-badge">API</span>
+      <h1>Recettes de cuisine</h1>
+    </div>
+    <p>Grâce Destinée LEBIKI LAVANYA — Python Flask · SQLite · REST</p>
+  </div>
+  <span class="base-url" id="base-url-display">https://api-recettes.onrender.com</span>
+</header>
+
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <button class="sidebar-item active" onclick="showTab('client')">🍽️ Client Web</button>
+      <button class="sidebar-item" onclick="showTab('docs')">📖 Documentation</button>
+      <button class="sidebar-item" onclick="showTab('ajouter')">➕ Ajouter une recette</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Endpoints</div>
+      <button class="sidebar-item" onclick="showTab('docs'); scrollToEndpoint('ep1')">
+        <span class="method-badge get-badge">GET</span> /recettes
+      </button>
+      <button class="sidebar-item" onclick="showTab('docs'); scrollToEndpoint('ep2')">
+        <span class="method-badge get-badge">GET</span> /recettes/:id
+      </button>
+      <button class="sidebar-item" onclick="showTab('docs'); scrollToEndpoint('ep3')">
+        <span class="method-badge get-badge">GET</span> /search
+      </button>
+      <button class="sidebar-item" onclick="showTab('docs'); scrollToEndpoint('ep4')">
+        <span class="method-badge post-badge">POST</span> /recettes
+      </button>
+      <button class="sidebar-item" onclick="showTab('docs'); scrollToEndpoint('ep5')">
+        <span class="method-badge delete-badge">DELETE</span> /recettes/:id
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- TAB : CLIENT WEB -->
+    <div class="section active" id="section-client">
+      <h2 style="margin-bottom:0.3rem;">🍽️ Explorer les recettes</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:1.5rem;">Navigue et recherche dans la base de données de recettes.</p>
+
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Rechercher une recette ou un ingrédient..." />
+        <button onclick="searchRecettes()">Rechercher</button>
+      </div>
+
+      <div class="filters">
+        <button class="filter-btn active" onclick="filterCat('', this)">Toutes</button>
+        <button class="filter-btn" onclick="filterCat('Entrée', this)">Entrées</button>
+        <button class="filter-btn" onclick="filterCat('Plat principal', this)">Plats</button>
+        <button class="filter-btn" onclick="filterCat('Dessert', this)">Desserts</button>
+      </div>
+
+      <div class="recettes-grid" id="recettes-grid">
+        <div class="loading">Chargement des recettes...</div>
+      </div>
+    </div>
+
+    <!-- TAB : DOCS -->
+    <div class="section" id="section-docs">
+      <h2 style="margin-bottom:0.3rem;">📖 Documentation interactive</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:1.5rem;">Teste chaque route directement depuis cette page.</p>
+
+      <!-- EP1 -->
+      <div class="endpoint-card" id="ep1">
+        <div class="endpoint-header">
+          <span class="method-badge get-badge" style="font-size:0.75rem; padding:0.2rem 0.5rem;">GET</span>
+          <span class="endpoint-path">/recettes</span>
+          <span class="endpoint-desc">Récupérer toutes les recettes</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1rem;">Retourne la liste complète des recettes. Paramètre optionnel : <code>?categorie=Dessert</code></p>
+          <div class="try-section">
+            <div class="try-label">Paramètre optionnel</div>
+            <input class="try-input" id="ep1-cat" placeholder="categorie (ex: Dessert) — optionnel" />
+            <button class="try-btn" onclick="tryEndpoint('ep1')">▶ Tester</button>
+          </div>
+          <div class="response-box" id="ep1-res" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- EP2 -->
+      <div class="endpoint-card" id="ep2">
+        <div class="endpoint-header">
+          <span class="method-badge get-badge" style="font-size:0.75rem; padding:0.2rem 0.5rem;">GET</span>
+          <span class="endpoint-path">/recettes/:id</span>
+          <span class="endpoint-desc">Récupérer une recette par ID</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1rem;">Retourne les détails complets d'une recette selon son ID.</p>
+          <div class="try-section">
+            <div class="try-label">ID de la recette</div>
+            <input class="try-input" id="ep2-id" placeholder="Ex: 1" type="number" min="1" />
+            <button class="try-btn" onclick="tryEndpoint('ep2')">▶ Tester</button>
+          </div>
+          <div class="response-box" id="ep2-res" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- EP3 -->
+      <div class="endpoint-card" id="ep3">
+        <div class="endpoint-header">
+          <span class="method-badge get-badge" style="font-size:0.75rem; padding:0.2rem 0.5rem;">GET</span>
+          <span class="endpoint-path">/recettes/search?q=...</span>
+          <span class="endpoint-desc">Recherche par nom ou ingrédient</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1rem;">Recherche dans le nom et les ingrédients des recettes.</p>
+          <div class="try-section">
+            <div class="try-label">Terme de recherche</div>
+            <input class="try-input" id="ep3-q" placeholder="Ex: pâtes ou poulet" />
+            <button class="try-btn" onclick="tryEndpoint('ep3')">▶ Tester</button>
+          </div>
+          <div class="response-box" id="ep3-res" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- EP4 -->
+      <div class="endpoint-card" id="ep4">
+        <div class="endpoint-header">
+          <span class="method-badge post-badge" style="font-size:0.75rem; padding:0.2rem 0.5rem;">POST</span>
+          <span class="endpoint-path">/recettes</span>
+          <span class="endpoint-desc">Ajouter une nouvelle recette</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1rem;">Corps de la requête en JSON. Champs obligatoires : <code>nom</code>, <code>ingredients</code>, <code>etapes</code></p>
+          <div class="try-section">
+            <div class="try-label">Corps JSON</div>
+            <textarea class="try-input" id="ep4-body" rows="6">{
+  "nom": "Ma recette",
+  "description": "Une délicieuse recette",
+  "ingredients": "Ingrédient 1, Ingrédient 2",
+  "etapes": "1. Étape 1\n2. Étape 2",
+  "temps": 30,
+  "difficulte": "Facile",
+  "categorie": "Plat principal"
+}</textarea>
+            <button class="try-btn" onclick="tryEndpoint('ep4')">▶ Tester</button>
+          </div>
+          <div class="response-box" id="ep4-res" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- EP5 -->
+      <div class="endpoint-card" id="ep5">
+        <div class="endpoint-header">
+          <span class="method-badge delete-badge" style="font-size:0.75rem; padding:0.2rem 0.5rem;">DELETE</span>
+          <span class="endpoint-path">/recettes/:id</span>
+          <span class="endpoint-desc">Supprimer une recette</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1rem;">Supprime définitivement une recette selon son ID.</p>
+          <div class="try-section">
+            <div class="try-label">ID à supprimer</div>
+            <input class="try-input" id="ep5-id" placeholder="Ex: 3" type="number" min="1" />
+            <button class="try-btn" style="background:var(--delete);" onclick="tryEndpoint('ep5')">▶ Tester</button>
+          </div>
+          <div class="response-box" id="ep5-res" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB : AJOUTER -->
+    <div class="section" id="section-ajouter">
+      <h2 style="margin-bottom:0.3rem;">➕ Ajouter une recette</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:1.5rem;">Ajoute une nouvelle recette à la base de données via l'API.</p>
+
+      <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:1.5rem;">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Nom de la recette *</label>
+            <input type="text" id="f-nom" placeholder="Ex: Tarte aux fraises" />
+          </div>
+          <div class="form-group full">
+            <label>Description</label>
+            <input type="text" id="f-desc" placeholder="Une courte description..." />
+          </div>
+          <div class="form-group full">
+            <label>Ingrédients * (séparés par des virgules)</label>
+            <textarea id="f-ing" placeholder="Farine, œufs, sucre, beurre..."></textarea>
+          </div>
+          <div class="form-group full">
+            <label>Étapes * (une étape par ligne)</label>
+            <textarea id="f-etapes" placeholder="1. Préchauffer le four&#10;2. Mélanger les ingrédients..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Temps (minutes)</label>
+            <input type="number" id="f-temps" placeholder="30" min="1" />
+          </div>
+          <div class="form-group">
+            <label>Difficulté</label>
+            <select id="f-diff">
+              <option>Facile</option>
+              <option>Moyen</option>
+              <option>Difficile</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Catégorie</label>
+            <select id="f-cat">
+              <option>Plat principal</option>
+              <option>Entrée</option>
+              <option>Dessert</option>
+              <option>Soupe</option>
+              <option>Snack</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-submit" onclick="ajouterRecette()">✓ Ajouter la recette</button>
+        <div id="form-result" style="margin-top:1rem; font-size:0.85rem;"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL RECETTE -->
+<div class="modal-overlay" id="modal">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+  const API = 'https://api-recettes-xxxx.onrender.com'; // ← À remplacer après déploiement
+  let allRecettes = [];
+  let filtreActif = '';
+
+  // ── TABS ──
+  function showTab(tab) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('section-' + tab).classList.add('active');
+    if (tab === 'client') chargerRecettes();
+  }
+
+  function scrollToEndpoint(id) {
+    setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+
+  // ── CHARGER RECETTES ──
+  async function chargerRecettes(cat = '') {
+    const grid = document.getElementById('recettes-grid');
+    grid.innerHTML = '<div class="loading">Chargement...</div>';
+    try {
+      const url = cat ? `${API}/recettes?categorie=${encodeURIComponent(cat)}` : `${API}/recettes`;
+      const res = await fetch(url);
+      allRecettes = await res.json();
+      afficherRecettes(allRecettes);
+    } catch (e) {
+      grid.innerHTML = '<div class="empty">⚠️ Impossible de contacter l\'API. Vérifiez que le backend est démarré.</div>';
+    }
+  }
+
+  function afficherRecettes(recettes) {
+    const grid = document.getElementById('recettes-grid');
+    if (recettes.length === 0) {
+      grid.innerHTML = '<div class="empty">Aucune recette trouvée.</div>';
+      return;
+    }
+    grid.innerHTML = recettes.map(r => `
+      <div class="recette-card" onclick="ouvrirRecette(${r.id})">
+        <div class="recette-cat">${r.categorie}</div>
+        <div class="recette-nom">${r.nom}</div>
+        <div class="recette-desc">${r.description || 'Cliquez pour voir la recette'}</div>
+        <div class="recette-meta">
+          <span>⏱ ${r.temps} min</span>
+          <span>📊 ${r.difficulte}</span>
+          <span>🥘 ${r.ingredients.length} ing.</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── RECHERCHE ──
+  async function searchRecettes() {
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) { chargerRecettes(filtreActif); return; }
+    const grid = document.getElementById('recettes-grid');
+    grid.innerHTML = '<div class="loading">Recherche...</div>';
+    try {
+      const res = await fetch(`${API}/recettes/search?q=${encodeURIComponent(q)}`);
+      const recettes = await res.json();
+      afficherRecettes(recettes);
+    } catch (e) {
+      grid.innerHTML = '<div class="empty">Erreur de connexion à l\'API.</div>';
+    }
+  }
+
+  // ── FILTRE CATÉGORIE ──
+  function filterCat(cat, btn) {
+    filtreActif = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('search-input').value = '';
+    chargerRecettes(cat);
+  }
+
+  // ── MODAL ──
+  async function ouvrirRecette(id) {
+    try {
+      const res = await fetch(`${API}/recettes/${id}`);
+      const r = await res.json();
+      document.getElementById('modal-content').innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.3rem;">
+          <h2>${r.nom}</h2>
+          <span style="font-size:0.7rem; background:rgba(255,107,53,0.2); color:var(--accent); padding:0.2rem 0.6rem; border-radius:4px;">${r.categorie}</span>
+        </div>
+        <div class="modal-meta">${r.description || ''} · ⏱ ${r.temps} min · 📊 ${r.difficulte}</div>
+        <div class="modal-section">
+          <h4>Ingrédients</h4>
+          <ul>${r.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+        </div>
+        <div class="modal-section">
+          <h4>Préparation</h4>
+          <ol>${r.etapes.map(e => `<li>${e.replace(/^\d+\.\s*/, '')}</li>`).join('')}</ol>
+        </div>
+        <button class="modal-close" onclick="fermerModal()">✕ Fermer</button>
+      `;
+      document.getElementById('modal').classList.add('open');
+    } catch(e) {}
+  }
+
+  function fermerModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) fermerModal();
+  });
+
+  // ── DOCUMENTATION INTERACTIVE ──
+  async function tryEndpoint(ep) {
+    const resBox = document.getElementById(ep + '-res');
+    resBox.style.display = 'block';
+    resBox.innerHTML = '<div class="response-header"><span style="color:var(--muted);">En cours...</span></div>';
+
+    let url, method = 'GET', body = null, headers = {};
+
+    if (ep === 'ep1') {
+      const cat = document.getElementById('ep1-cat').value.trim();
+      url = cat ? `${API}/recettes?categorie=${encodeURIComponent(cat)}` : `${API}/recettes`;
+    } else if (ep === 'ep2') {
+      const id = document.getElementById('ep2-id').value;
+      if (!id) { resBox.innerHTML = '<div class="response-header"><span style="color:var(--red);">Entrez un ID</span></div>'; return; }
+      url = `${API}/recettes/${id}`;
+    } else if (ep === 'ep3') {
+      const q = document.getElementById('ep3-q').value.trim();
+      if (!q) { resBox.innerHTML = '<div class="response-header"><span style="color:var(--red);">Entrez un terme</span></div>'; return; }
+      url = `${API}/recettes/search?q=${encodeURIComponent(q)}`;
+    } else if (ep === 'ep4') {
+      url = `${API}/recettes`;
+      method = 'POST';
+      headers['Content-Type'] = 'application/json';
+      body = document.getElementById('ep4-body').value;
+    } else if (ep === 'ep5') {
+      const id = document.getElementById('ep5-id').value;
+      if (!id) { resBox.innerHTML = '<div class="response-header"><span style="color:var(--red);">Entrez un ID</span></div>'; return; }
+      url = `${API}/recettes/${id}`;
+      method = 'DELETE';
+    }
+
+    try {
+      const res = await fetch(url, { method, headers, body });
+      const data = await res.json();
+      const ok = res.ok;
+      resBox.innerHTML = `
+        <div class="response-header">
+          <span class="status-badge ${ok ? 'status-ok' : 'status-err'}">${res.status}</span>
+          <span style="color:var(--muted);">${method} ${url.replace(API, '')}</span>
+        </div>
+        <div class="response-body">${JSON.stringify(data, null, 2)}</div>
+      `;
+      if (ep === 'ep4' && ok) chargerRecettes();
+      if (ep === 'ep5' && ok) chargerRecettes();
+    } catch(e) {
+      resBox.innerHTML = `<div class="response-header"><span class="status-badge status-err">ERREUR</span><span style="color:var(--muted);">Impossible de contacter l'API</span></div>`;
+    }
+  }
+
+  // ── AJOUTER RECETTE (FORMULAIRE) ──
+  async function ajouterRecette() {
+    const nom = document.getElementById('f-nom').value.trim();
+    const ing = document.getElementById('f-ing').value.trim();
+    const etapes = document.getElementById('f-etapes').value.trim();
+    const result = document.getElementById('form-result');
+
+    if (!nom || !ing || !etapes) {
+      result.innerHTML = '<span style="color:var(--red);">⚠️ Les champs nom, ingrédients et étapes sont obligatoires.</span>';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/recettes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nom,
+          description: document.getElementById('f-desc').value.trim(),
+          ingredients: ing,
+          etapes: etapes,
+          temps: parseInt(document.getElementById('f-temps').value) || 0,
+          difficulte: document.getElementById('f-diff').value,
+          categorie: document.getElementById('f-cat').value
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        result.innerHTML = `<span style="color:var(--green);">✓ Recette "${data.nom}" ajoutée avec succès ! ID: ${data.id}</span>`;
+        document.querySelectorAll('#section-ajouter input, #section-ajouter textarea').forEach(el => el.value = '');
+      } else {
+        result.innerHTML = `<span style="color:var(--red);">⚠️ Erreur: ${data.erreur}</span>`;
+      }
+    } catch(e) {
+      result.innerHTML = '<span style="color:var(--red);">⚠️ Impossible de contacter l\'API.</span>';
+    }
+  }
+
+  // Touche Entrée sur la recherche
+  document.getElementById('search-input').addEventListener('keypress', e => {
+    if (e.key === 'Enter') searchRecettes();
+  });
+
+  // Chargement initial
+  chargerRecettes();
+</script>
+
+</body>
+</html>
